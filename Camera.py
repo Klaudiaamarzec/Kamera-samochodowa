@@ -5,10 +5,7 @@ import cv2 as cv
 import numpy as np
 
 
-current_directory = os.path.dirname(os.path.abspath(__file__))
-haarcascade_car_path = os.path.join(current_directory, 'haarcascade_car.xml')
-car_cascade = cv.CascadeClassifier(haarcascade_car_path)
-
+car_cascade = cv.CascadeClassifier('haarcascade_car.xml')
 people_cascade = cv.CascadeClassifier(cv.data.haarcascades + 'haarcascade_fullbody.xml')
 
 
@@ -55,7 +52,8 @@ def detect_people(frame):
 
 
 def detect_cars(frame):
-    cars_detection = car_cascade.detectMultiScale(frame, 1.7, 2)
+    gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
+    cars_detection = car_cascade.detectMultiScale(gray, 1.4, 2)
 
     for (x, y, w, h) in cars_detection:
         cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 255, 0), 2)
