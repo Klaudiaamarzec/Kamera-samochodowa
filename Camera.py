@@ -10,6 +10,8 @@ haarcascade_car_path = os.path.join(current_directory, 'haarcascade_car.xml')
 car_cascade = cv.CascadeClassifier(haarcascade_car_path)
 
 people_cascade = cv.CascadeClassifier(cv.data.haarcascades + 'haarcascade_fullbody.xml')
+
+
 def detect_objects(frame, mode):
     if mode == 'obstacles':
         # Wykrywaj przeszkody na drodze
@@ -28,6 +30,7 @@ def detect_objects(frame, mode):
         processed_frame = frame
     return processed_frame
 
+
 def detect_bars(frame):
     # Kod detekcji przeszkód na drodze (bez zmian)
     gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
@@ -42,12 +45,14 @@ def detect_bars(frame):
                     cv.rectangle(frame, (min(x1, x2), min(y1, y2)), (max(x1, x2), max(y1, y2)), (0, 255, 255), 2)
     return frame
 
+
 def detect_people(frame):
     bodies_detection = people_cascade.detectMultiScale(frame, 1.18, 3)
 
     for (x,y,w,h) in bodies_detection:
         cv2.rectangle(frame, (x,y), (x+w, y+h), (0,255,0), 2)
     return frame
+
 
 def detect_cars(frame):
     cars_detection = car_cascade.detectMultiScale(frame, 1.7, 2)
@@ -56,12 +61,13 @@ def detect_cars(frame):
         cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 255, 0), 2)
     return frame
 
+
 def detect_objects_with_switch(video_path):
     cap = cv.VideoCapture(video_path)
     width = int(cap.get(cv.CAP_PROP_FRAME_WIDTH))
     height = int(cap.get(cv.CAP_PROP_FRAME_HEIGHT))
-    resized_width = int(width * 0.3)
-    resized_height = int(height * 0.3)
+    resized_width = int(width * 0.5)
+    resized_height = int(height * 0.5)
     mode = 'obstacles'  # Początkowy tryb detekcji
     while True:
         ret, frame = cap.read()
@@ -87,6 +93,7 @@ def detect_objects_with_switch(video_path):
     cap.release()
     cv.destroyAllWindows()
 
+
 if __name__ == "__main__":
-    video_path = "Videos/Rowerzysta.mp4"
+    video_path = "Videos/Parkowanie - samochody.mp4"
     detect_objects_with_switch(video_path)
