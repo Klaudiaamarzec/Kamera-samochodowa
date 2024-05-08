@@ -1,5 +1,3 @@
-import os
-
 import cv2
 import cv2 as cv
 import numpy as np
@@ -32,31 +30,31 @@ def detect_objects(frame, mode, bumper):
 
 
 def detect_bumper(frame):
+    # Kod detekcji przeszkód na drodze (bez zmian)
     gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
     blurred = cv.GaussianBlur(gray, (5, 5), 0)
     edges = cv.Canny(blurred, 50, 150)  # 50, 150
 
-    # Kontury na oryginalnym obrazie
-    #cv.drawContours(frame, contours, -1, (0, 255, 0), 2)
-
     height, width = frame.shape[:2]
     lower_half_edges = edges[height // 2:height, :]
+
+    # Kontury na obrazie
     contours, _ = cv.findContours(lower_half_edges.copy(), cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
 
     for contour in contours:
-        # Przesuniecie konturów do ich właściwej pozycji w oryginalnym obrazie
+        # Przesunięcie konturów do ich właściwej pozycji w oryginalnym obrazie
         contour[:, :, 1] += height // 2
 
     # Sortowanie według długości obwodu (malejąco)
     sorted_contours = sorted(contours, key=cv.contourArea, reverse=True)
-    # 10 najdłuższych konturów
-    longest_contours = sorted_contours[:10]
+    # 8 najdłuższych konturów
+    longest_contours = sorted_contours[:8]
 
     bumper = []
     for contour in longest_contours:
         x, y, w, h = cv.boundingRect(contour)
         aspect_ratio = float(w) / h
-        # stosunek szerokości do wysokości
+        # Jeśli stosunek szerokości do wysokości jest w zakresie, dodaj kontur
         if aspect_ratio > 2.5:
             bumper.append(contour)
             break
