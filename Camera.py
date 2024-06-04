@@ -88,7 +88,7 @@ def detect_people(frame):
 
 
 def detect_cars(frame):
-    cars_detection = car_cascade.detectMultiScale(frame, 1.4, 5)
+    cars_detection = car_cascade.detectMultiScale(frame, 1.4, 2)
 
     for (x, y, w, h) in cars_detection:
         cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 255, 0), 2)
@@ -135,5 +135,5 @@ def detect_objects_with_switch(video_path):
 
 
 if __name__ == "__main__":
-    video_path = "Videos/Parkowanie - słupki.mp4"
+    video_path = "Videos/Parkowanie - samochody.mp4"
     detect_objects_with_switch(video_path)
