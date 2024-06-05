@@ -1,14 +1,15 @@
+from tkinter import filedialog
+import pygame
+import os
 import cv2
 import cv2 as cv
 import numpy as np
-
 
 car_cascade = cv.CascadeClassifier('haarcascade_car.xml')
 people_cascade = cv.CascadeClassifier(cv.data.haarcascades + 'haarcascade_fullbody.xml')
 
 
 def detect_objects(frame, mode, bumper):
-
     cv.drawContours(frame, bumper, -1, (0, 255, 0), 2)
 
     if mode == 'obstacles':
@@ -66,7 +67,7 @@ def detect_bars(frame):
     # Kod detekcji przeszkód na drodze (bez zmian)
     gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
     blurred = cv.GaussianBlur(gray, (5, 5), 0)
-    edges = cv.Canny(blurred, 30, 150)   # 50, 150
+    edges = cv.Canny(blurred, 30, 150)  # 50, 150
     lines = cv.HoughLinesP(edges, 1, np.pi / 180, 120, minLineLength=320, maxLineGap=70)
 
     if lines is not None:
@@ -82,8 +83,8 @@ def detect_bars(frame):
 def detect_people(frame):
     bodies_detection = people_cascade.detectMultiScale(frame, 1.18, 3)
 
-    for (x,y,w,h) in bodies_detection:
-        cv2.rectangle(frame, (x,y), (x+w, y+h), (0,255,0), 2)
+    for (x, y, w, h) in bodies_detection:
+        cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
     return frame
 
 
@@ -107,6 +108,7 @@ def detect_objects_with_switch(video_path):
     ret, frame = cap.read()
     if not ret:
         return
+
     bumper = detect_bumper(frame)
 
     while True:
@@ -117,6 +119,7 @@ def detect_objects_with_switch(video_path):
         if processed_frame is not None:
             resized_frame = cv.resize(processed_frame, (resized_width, resized_height))
             cv.imshow('Detection', resized_frame)
+
         key = cv.waitKey(1) & 0xFF
         if key == ord('q'):
             break
@@ -130,10 +133,100 @@ def detect_objects_with_switch(video_path):
             mode = 'all'
         elif key == ord(' '):  # Obsługa zamknięcia obrazu po naciśnięciu spacji
             break
+
     cap.release()
     cv.destroyAllWindows()
+    main()
+
+
+def browse_file(video_path):
+    if video_path:
+        detect_objects_with_switch(video_path)
+
+
+def get_video_list():
+    videos_path = "Videos"
+    video_files = [f for f in os.listdir(videos_path) if f.endswith(".mp4")]
+    return video_files
+
+
+def draw_start_screen(screen, video_files):
+    pink = (255, 192, 203)
+    yellow = (255, 255, 0)
+    black = (0, 0, 0)
+
+    font = pygame.font.SysFont(None, 36)
+
+    screen.fill(pink)
+
+    choose_file_text = font.render("WYBIERZ PLIK", True, black)
+    choose_file_text_rect = choose_file_text.get_rect(center=(700 / 2, 50))
+    screen.blit(choose_file_text, choose_file_text_rect)
+
+    # Tworzenie rozwijanej listy
+    for i, video in enumerate(video_files):
+        text_surface = font.render(video, True, black)
+        text_rect = text_surface.get_rect(topleft=(120, 100 + i * 30))
+        if text_rect.collidepoint(pygame.mouse.get_pos()):
+            pygame.draw.rect(screen, yellow, text_rect)
+        screen.blit(text_surface, text_rect)
+
+    legend_texts = [
+        "KLAWISZOLOGIA",
+        " ",
+        "Spacja - wyłączenie nagrania",
+        "O - wykrywanie słupków",
+        "P - wykrywanie ludzi",
+        "C - wykrywanie samochodów",
+        "A - wykrywanie wszystkiego na raz"
+    ]
+
+    legend_y = 100 + len(video_files) * 30 + 20
+
+    legend_width = 450
+    legend_height = len(legend_texts) * 30 + 20
+    legend_rect = pygame.Rect(120, legend_y, legend_width, legend_height)
+    pygame.draw.rect(screen, yellow, legend_rect)
+
+    for legend_text in legend_texts:
+        legend_surface = font.render(legend_text, True, black)
+        legend_rect = legend_surface.get_rect(topleft=(120, legend_y))
+        screen.blit(legend_surface, legend_rect)
+        legend_y += 30  # Odstęp między kolejnymi liniami w legendzie
+
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            mouse_pos = pygame.mouse.get_pos()
+            if 200 <= mouse_pos[0] <= 400:
+                for i, video in enumerate(video_files):
+                    text_surface = font.render(video, True, yellow)
+                    text_rect = text_surface.get_rect(topleft=(200, 100 + i * 30))
+                    if text_rect.collidepoint(mouse_pos):
+                        return os.path.join("Videos", video)
+
+    return None
+
+
+def main():
+    pygame.init()
+
+    screen_width = 700
+    screen_height = 550
+    screen = pygame.display.set_mode((screen_width, screen_height))
+    pygame.display.set_caption("Konfigurator")
+
+    video_files = get_video_list()
+    video_path = None
+
+    while video_path is None:
+        video_path = draw_start_screen(screen, video_files)
+        pygame.display.flip()
+
+    pygame.quit()
+    browse_file(video_path)
 
 
 if __name__ == "__main__":
-    video_path = "Videos/Parkowanie - samochody.mp4"
-    detect_objects_with_switch(video_path)
+    main()
